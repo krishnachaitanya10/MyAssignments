@@ -1,7 +1,11 @@
+name: Uglify and Minify
+
 on:
   push:
     branches:
-      - main  # Change to your default branch
+      - main
+    paths:
+      - '**/*.js'
 
 jobs:
   build:
@@ -11,30 +15,26 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Set up Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '14'
 
     - name: Install dependencies
-      run: |
-        npm install uglify-js clean-css-cli html-minifier-terser
+      run: npm install uglify-js -g
 
-    - name: Uglify JavaScript
+    - name: Uglify and Minify JavaScript files
       run: |
-        set -e
-        find . -name "*.js" ! -name "*.min.js" | while read file; do
-          ./node_modules/.bin/uglifyjs $file --compress --mangle --output ${file%.js}.min.js || exit 1;
+        for file in $(find . -type f -name '*.js'); do
+          uglifyjs "$file" --compress --mangle --output "${file%.js}.min.js"
         done
 
-    - name: Minify CSS
+    - name: Commit and push changes
       run: |
-        set -e
-        find . -name "*.css" ! -name "*.min.css" | while read file; do
-          ./node_modules/.bin/cleancss -o ${file%.css}.min.css $file || exit 1;
-        done
-
-    - name: Minify HTML
-      run: |
-        set -e
-        find
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add .
+        git commit -m 'Uglify and minify JavaScript files'
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
