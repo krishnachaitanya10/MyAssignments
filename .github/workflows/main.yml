@@ -1,11 +1,9 @@
-name: Uglify and Minify
+name: Minify, Uglify, and Gzip Files
 
 on:
   push:
     branches:
-      - main
-    paths:
-      - '**/*.js'
+      - MyAssignments  # Adjust branch name as per your repository
 
 jobs:
   build:
@@ -21,20 +19,30 @@ jobs:
         node-version: '14'
 
     - name: Install dependencies
-      run: npm install uglify-js -g
+      run: npm install -g uglify-js clean-css-cli html-minifier
 
-    - name: Uglify and Minify JavaScript files
+    - name: Uglify and Minify JavaScript
       run: |
-        for file in $(find . -type f -name '*.js'); do
-          uglifyjs "$file" --compress --mangle --output "${file%.js}.min.js"
-        done
+        find . -name "*.js" -exec uglifyjs {} -o {} \;
+
+    - name: Minify CSS
+      run: |
+        find . -name "*.css" -exec cleancss -o {} {} \;
+
+    - name: Minify HTML
+      run: |
+        find . -name "*.html" -exec html-minifier --collapse-whitespace --remove-comments --minify-js true --minify-css true -o {} {} \;
+
+    - name: Gzip files
+      run: |
+        find . -name "*.html" -exec gzip -k {} \;
+        find . -name "*.css" -exec gzip -k {} \;
+        find . -name "*.js" -exec gzip -k {} \;
 
     - name: Commit and push changes
       run: |
         git config --global user.name 'github-actions'
         git config --global user.email 'github-actions@github.com'
         git add .
-        git commit -m 'Uglify and minify JavaScript files'
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        git commit -m 'Minified, uglified, and gzipped files'
+        git push https://github.com/username/repository.git HEAD:MyAssignments
