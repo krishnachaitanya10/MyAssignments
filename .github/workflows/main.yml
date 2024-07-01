@@ -1,0 +1,50 @@
+name: Uglify and Minify Assets
+
+on:
+  push:
+    branches:
+      - main  # Change to your default branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install uglify-js clean-css-cli html-minifier-terser -g
+
+    - name: Uglify JavaScript
+      run: |
+        find . -name "*.js" ! -name "*.min.js" | while read file; do
+          uglifyjs $file --compress --mangle --output ${file%.js}.min.js;
+        done
+
+    - name: Minify CSS
+      run: |
+        find . -name "*.css" ! -name "*.min.css" | while read file; do
+          cleancss -o ${file%.css}.min.css $file;
+        done
+
+    - name: Minify HTML
+      run: |
+        find . -name "*.html" | while read file; do
+          html-minifier-terser --collapse-whitespace --remove-comments --remove-redundant-attributes --use-short-doctype --minify-css true --minify-js true -o $file $file;
+        done
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions'
+        git config --global user.email 'github-actions@github.com'
+        git add .
+        git commit -m 'Automated uglification and minification'
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
