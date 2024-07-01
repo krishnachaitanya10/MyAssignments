@@ -1,28 +1,3 @@
-- name: Install dependencies
-  run: |
-    npm install uglify-js clean-css-cli html-minifier-terser
-- name: Uglify JavaScript
-  run: |
-    find . -name "*.js" ! -name "*.min.js" | while read file; do
-      /path/to/node_modules/.bin/uglifyjs $file --compress --mangle --output ${file%.js}.min.js;
-    done
-- name: Commit and push changes
-  run: |
-    git config --global user.name 'github-actions'
-    git config --global user.email 'github-actions@github.com'
-    git add *.min.js *.min.css *.html
-    git commit -m 'Automated uglification and minification'
-    git push
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-- name: Uglify JavaScript
-  run: |
-    set -e
-    find . -name "*.js" ! -name "*.min.js" | while read file; do
-      /path/to/node_modules/.bin/uglifyjs $file --compress --mangle --output ${file%.js}.min.js || exit 1;
-    done
-name: Uglify and Minify Assets
-
 on:
   push:
     branches:
